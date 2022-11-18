@@ -1,4 +1,5 @@
 #include <mutex>
+#include <vector>
 
 struct LockFullNode {
     int key;
@@ -24,8 +25,10 @@ public:
     void insert(int key);
     void remove(int key);
     bool search(int key);
+    void getElements(std::vector<int> &elements); // not thread-safe, use only for testing
 private:
     LockFullNode *root;
+    void getElementsHelper(std::vector<int> &elements, LockFullNode *node); // not thread-safe, use only for testing
 };
 
 LockFullAVLTree::LockFullAVLTree() {
@@ -210,3 +213,16 @@ void LockFullAVLTree::remove(int key) {
         }
     }
 }
+
+
+void LockFullAVLTree::getElements(std::vector<int> &elements) {
+    elements.clear();
+    getElementsHelper(elements, root);
+}
+
+void LockFullAVLTree::getElementsHelper(std::vector<int> &elements, LockFullNode *root) {
+    if (root == NULL) return;
+    getElementsHelper(elements, root->left);
+    if (root->valid) elements.push_back(root->key);
+    getElementsHelper(elements, root->right);
+} 
