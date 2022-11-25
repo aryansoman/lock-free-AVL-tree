@@ -20,7 +20,7 @@ bool LockFullAVLTree::search(int key) {
             }
             else {
                 cur->lock.unlock();
-                return false;
+		return false;
             }
         }
         else {
@@ -42,6 +42,7 @@ bool LockFullAVLTree::search(int key) {
 }
 
 void LockFullAVLTree::insert(int key) {
+    // printf("inserting key %d\n", key);
     root->lock.lock();
     LockFullNode *cur = root;
     LockFullNode *prev = NULL;
@@ -60,23 +61,15 @@ void LockFullAVLTree::insert(int key) {
                 cur = cur->left;
             }
             else {
-                LockFullNode *p = new LockFullNode(key, false, cur->tag - 1, 0);
-                if (prev != NULL) {
-                    if (cur == prev->right) {
-                        prev->right = p;
-                    }
-                    else {
-                        prev->left = p; 
-                    }
-                }
-                else {
-                    root = p;
-                }
-                p->left = new LockFullNode(key, true, 0, 0);
-                p->right = cur;
-                cur->tag = 0;
-                cur->lock.unlock();
-                if (prev != NULL) prev->lock.unlock();
+		if (prev != NULL) prev->lock.unlock();
+		LockFullNode *curCopy = new LockFullNode(cur->key, cur->valid, 0, cur->rbf);
+                cur->key = key;
+		cur->tag--;
+		cur->rbf = 0;
+		cur->valid = false;
+		cur->right = curCopy;
+		cur->left = new LockFullNode(key, true, 0, 0);
+		cur->lock.unlock();
                 return;
             }
         }
@@ -88,23 +81,14 @@ void LockFullAVLTree::insert(int key) {
                 cur = cur->right;
             }
             else {
-                LockFullNode *p = new LockFullNode(key-1, false, cur->tag - 1, 0);
-                if (prev != NULL) {
-                    if (cur == prev->right) {
-                        prev->right = p;
-                    }
-                    else {
-                        prev->left = p; 
-                    }
-                }
-                else {
-                    root = p;
-                }
-                p->right = new LockFullNode(key, true, 0, 0);
-                p->left = cur;
-                cur->tag = 0;
-                cur->lock.unlock();
-                if (prev != NULL) prev->lock.unlock();
+		if (prev != NULL) prev->lock.unlock();
+		LockFullNode *curCopy = new LockFullNode(cur->key, cur->valid, 0, cur->rbf);
+		cur->tag--;
+		cur->rbf = 0;
+		cur->valid = false;
+		cur->left = curCopy;
+		cur->right = new LockFullNode(key, true, 0, 0);
+		cur->lock.unlock();
                 return;
             }
         }
