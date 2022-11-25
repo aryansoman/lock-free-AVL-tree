@@ -1,35 +1,7 @@
 #include <mutex>
 #include <vector>
 
-struct LockFullNode {
-    int key;
-    bool valid;
-    int tag;
-    int rbf;
-    LockFullNode *left;
-    LockFullNode *right;
-    std::mutex lock;
-    LockFullNode(int k, bool v, int t, int r) {
-        key = k;
-        valid = v;
-        left = NULL;
-        right = NULL;
-        tag = t;
-        rbf = r;
-    }
-};
-
-class LockFullAVLTree {
-public: 
-    LockFullAVLTree();
-    void insert(int key);
-    void remove(int key);
-    bool search(int key);
-    void getElements(std::vector<int> &elements); // not thread-safe, use only for testing
-private:
-    LockFullNode *root;
-    void getElementsHelper(std::vector<int> &elements, LockFullNode *node); // not thread-safe, use only for testing
-};
+#include "LockFullAVLTree.hpp"
 
 LockFullAVLTree::LockFullAVLTree() {
     root = new LockFullNode(0, false, 0, 0);
@@ -87,7 +59,7 @@ void LockFullAVLTree::insert(int key) {
                 prev = cur;
                 cur = cur->left;
             }
-            else { 
+            else {
                 LockFullNode *p = new LockFullNode(key, false, cur->tag - 1, 0);
                 if (prev != NULL) {
                     if (cur == prev->right) {
@@ -96,6 +68,9 @@ void LockFullAVLTree::insert(int key) {
                     else {
                         prev->left = p; 
                     }
+                }
+                else {
+                    root = p;
                 }
                 p->left = new LockFullNode(key, true, 0, 0);
                 p->right = cur;
@@ -121,6 +96,9 @@ void LockFullAVLTree::insert(int key) {
                     else {
                         prev->left = p; 
                     }
+                }
+                else {
+                    root = p;
                 }
                 p->right = new LockFullNode(key, true, 0, 0);
                 p->left = cur;
@@ -172,6 +150,7 @@ void LockFullAVLTree::remove(int key) {
             }
             else { 
                 cur->lock.unlock();
+                if (prev != NULL) prev->lock.unlock();
                 return;
             }
         }
@@ -208,6 +187,7 @@ void LockFullAVLTree::remove(int key) {
             }
             else {
                 cur->lock.unlock();
+                if (prev != NULL) prev->lock.unlock();
                 return;
             }
         }
