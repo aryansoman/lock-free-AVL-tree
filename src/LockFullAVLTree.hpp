@@ -28,5 +28,6 @@ public:
     void getElements(std::vector<int> &elements); // not thread-safe, use only for testing
 private:
     LockFullNode *root;
+    void rebalanceAt(LockFullNode *parent, LockFullNode *child);
     void getElementsHelper(std::vector<int> &elements, LockFullNode *node); // not thread-safe, use only for testing
 };

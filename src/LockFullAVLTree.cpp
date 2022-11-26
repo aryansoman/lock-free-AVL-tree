@@ -3,6 +3,14 @@
 
 #include "LockFullAVLTree.hpp"
 
+int lb(LockFullNode *u) {
+    return (u->rbf == -1) ? -1 : 0; 
+}
+
+int rb(LockFullNode *u) {
+    return (u->rbf == 1) ? 1 : 0; 
+}
+
 LockFullAVLTree::LockFullAVLTree() {
     root = new LockFullNode(0, false, 0, 0);
 }
@@ -121,7 +129,7 @@ void LockFullAVLTree::remove(int key) {
                         root = cur->right;
                     }
                     // change tag of cur->left
-                    cur->right->tag += cur->tag + 1 + (cur->rbf == 1) ? 1 : 0;
+                    cur->right->tag += cur->tag + 1 - rb(cur);
                     cur->left->lock.unlock();
                     cur->right->lock.unlock();
                     cur->lock.unlock();
@@ -158,7 +166,7 @@ void LockFullAVLTree::remove(int key) {
                         root = cur->left;
                     }
                     // change tag of cur->left
-                    cur->left->tag += cur->tag + 1 + (cur->rbf == -1) ? 1 : 0;
+                    cur->left->tag += cur->tag + 1 - lb(cur);
                     cur->left->lock.unlock();
                     cur->right->lock.unlock();
                     cur->lock.unlock();
@@ -190,3 +198,156 @@ void LockFullAVLTree::getElementsHelper(std::vector<int> &elements, LockFullNode
     if (root->valid) elements.push_back(root->key);
     getElementsHelper(elements, root->right);
 } 
+
+void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
+    // precond: both parent and child are locked, parent->tag == 0, child->tag != 0
+    // precond: other child of parent is locked. 
+    // precond: child of other child of parent on same side as our child is locked
+
+    bool isLeft = parent->left == child;
+    
+    // phase 1: tag value decrease
+    if (isLeft) {
+        if (child->tag == -1) {
+            child->tag = 0;
+            parent->tag = -1 - lb(parent); 
+            parent->rbf++;
+        }
+        else { // child->tag > 0
+            child->tag--;
+            parent->tag = -rb(parent);
+            parent->rbf--;
+        }
+    }
+    else {
+        if (child->tag == 1) {
+            child->tag = 0;
+            parent->tag = 1 + rb(parent);
+            parent->rbf--;
+        }
+        else { // child->tag < 0
+            child->tag++;
+            parent->tag = lb(parent);
+            parent->rbf++;
+        }
+    }
+
+    // phase 2
+    if (parent->rbf == 2) {
+        LockFullNode *c = parent->left;
+        LockFullNode *s = parent->right;
+        int ck = c->key;
+        int pk = parent->key;
+        if (c->tag != 0) return;
+        if (c->rbf >= 0) {
+            parent->key = ck;
+            parent->tag -= rb(c);
+            parent->rbf = c->rbf - 1;
+            parent->left = c->left;
+            parent->right = c;
+            c->key = pk;
+            c->tag = 0;
+            c->rbf = rb(c) + 1;
+            c->left = c->right;
+            c->right = s;
+        }
+        else { // c->rbf == -1
+            LockFullNode *g = c->right; // non-NULL;
+            if (g->tag > 0) {
+                g->tag--;
+                c->rbf = 0;
+                parent->rbf = 1;
+                parent->tag++;
+            }
+            else if (g->tag == 0) {
+                int gk = g->key;
+                int sk = s->key;
+                parent->key = gk;
+                parent->tag++;
+                parent->rbf = 0;
+                parent->right = g;
+                c->rbf = -lb(g);
+                c->right = g->left;
+                g->key = pk;
+                g->left = g->right;
+                g->tag = 0;
+                g->rbf = rb(g);
+                g->right = s; 
+            }
+            else { // g->tag == -1
+                int gk = g->key;
+                int sk = s->key;
+                parent->key = gk;
+                parent->rbf = g->rbf;
+                parent->right = g;
+                c->tag = 0;
+                c->rbf = -lb(g)-1;
+                c->right = g->left;
+                g->key = pk;
+                g->left = g->right;
+                g->tag = 0;
+                g->rbf = rb(g)+1;
+                g->right = s; 
+            }
+        }
+    }
+    else if (parent->rbf == -2) {
+        LockFullNode *s = parent->left;
+        LockFullNode *c = parent->right;
+        int ck = c->key;
+        int pk = parent->key;
+        if (c->tag != 0) return;
+        if (c->rbf <= 0) {
+            parent->key = ck;
+            parent->tag += lb(c);
+            parent->rbf = c->rbf + 1;
+            parent->right = c->right;
+            parent->left = c;
+            c->key = pk;
+            c->tag = 0;
+            c->rbf = lb(c) - 1;
+            c->right = c->left;
+            c->left = s;
+        }
+        else { // c->rbf == 1
+            LockFullNode *g = c->left; // non-NULL;
+            if (g->tag < 0) {
+                g->tag++;
+                c->rbf = 0;
+                parent->rbf = -1;
+                parent->tag--;
+            }
+            else if (g->tag == 0) {
+                int gk = g->key;
+                int sk = s->key;
+                parent->key = gk;
+                parent->tag--;
+                parent->rbf = 0;
+                parent->left = g;
+                c->rbf = -rb(g);
+                c->left = g->right;
+                g->key = pk;
+                g->right = g->left;
+                g->tag = 0;
+                g->rbf = lb(g);
+                g->left = s; 
+            }
+            else { // g->tag == 1
+                int gk = g->key;
+                int sk = s->key;
+                parent->key = gk;
+                parent->rbf = g->rbf;
+                parent->left = g;
+                c->tag = 0;
+                c->rbf = rb(g) + 1;
+                c->left = g->right;
+                g->key = pk;
+                g->right = g->left;
+                g->tag = 0;
+                g->rbf = -lb(g)-1;
+                g->left = s; 
+            }
+        }
+    }
+
+}
