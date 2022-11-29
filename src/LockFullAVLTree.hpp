@@ -26,6 +26,7 @@ public:
     void remove(int key);
     bool search(int key);
     void getElements(std::vector<int> &elements); // not thread-safe, use only for testing
+    long unbalance(); // not thread-safe, use only for testing
 private:
     LockFullNode *root;
     void rebalanceAt(LockFullNode *parent, LockFullNode *child);

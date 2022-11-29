@@ -351,3 +351,22 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
     }
 
 }
+
+long size(LockFullNode *node) {
+    if (node == NULL) return 0;
+    return 1L + size(node->left) + size(node->right);
+}
+
+long unbalanceHelper(LockFullNode *node, long totalSize, long &unbalance) { 
+    // returns size of subtree, collects unbalance in accum
+    if (node == NULL) return 0;
+    long sizeHere = 1 + unbalanceHelper(node->left, totalSize, unbalance) + unbalanceHelper(node->right, totalSize, unbalance);
+    unbalance += (long)abs(node->tag) * (long)(totalSize - sizeHere);
+    return sizeHere; 
+}
+
+long LockFullAVLTree::unbalance() {
+    long unbalance = 0;
+    unbalanceHelper(root, size(root), unbalance);
+    return unbalance;
+}
