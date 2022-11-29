@@ -57,18 +57,39 @@ Stretch:
 
 We will code in C++ because it enables low-level manipulation of pointers and memory and relatedly is quite fast, making it a great language to implement common data structures like sets and maps. The implementation should be pretty platform-independent as long as there is a CAS operation, which is ubiquitous. We will not require computational resources beyond our own machines and the GHC machines. 
 
-## Schedule
+## Work Checklist
 
-**Nov 9 - 12**: Additional research into AVL trees. Begin implementation for lock-full AVL tree.
+Tree Implementations
 
-**Nov 13 - 19**: Finish implementing search, insertion, and deletion for lock-full AVL tree + unit tests.
+|| Lock-full AVL Tree | Lock-free AVL Tree | 
+|---|---|---|
+|Boilerplate| done | not started |
+|search| done | not started | 
+|insert| done | not started |
+|delete| done | not started |
+|rebalance| in progress | not started |
+|s/i/d tests| done | not started |
+|rebalance tests| in progress | not started |
 
-**Nov 20 - 30**: Finish implementing search, insertion, and deletion for lock-free AVL tree + unit tests.
+Performance Testing and Presentation  
+| | |
+|---|---|
+| Write test script | not started |
+| Lock-full AVL Tree results | not started |
+|Lock-free AVL Tree results | not started |
+| Report | not started | 
+|Poster | not started |
 
-**Dec 1 -  3**: Optimize lock-free and lock-full trees. Complete throughput comparison. Write results in report.
+## Revised Schedule (Post-Milestone)
 
-**Dec 4 -  13**: Stretch goal or slack days in case one of the implementations takes more time, accounting for sickness, etc. 
+Fri Dec 2: Add lock-full rebalance tests. (Aryan) Finish rebalance function for lock-full. (Jerry)
 
-**Dec 14 - 17**: Finish final report and create poster presentation.
+Mon Dec 5: Finish search, insert, delete (Jerry) for lock-free + test cases (Aryan). 
 
-**Dec 18**: Presentation day.
+Fri Dec 9: Write rebalance function + tests for imbalance reduction for lock-free. (Aryan) Write performance tests for the trees. (Jerry)
+
+Mon Dec 12: Run performance tests on trees. (Aryan + Jerry)
+
+Fri Dec 16: Write report. (Aryan + Jerry) 
+
+Sun Dec 18: Finish poster. (Aryan + Jerry)
