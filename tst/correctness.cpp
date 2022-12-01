@@ -35,8 +35,8 @@ void *processCommand1(void *command) {
     return NULL;
 }
 
-void concurrent1() {
-    printf("Starting test concurrent1...\n");
+void simpleConcurrentNoRebalance() {
+    printf("Starting test simpleConcurrentNoRebalance...\n");
     LockFullAVLTree *t = new LockFullAVLTree;
     const int totalElements = 1 << 15;
 
@@ -99,12 +99,12 @@ void concurrent1() {
     for (int i = 1; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
-    printf("Verfied nonexistence of the elements\n");
-    printf("Test concurrent1 passed!\n");
+    printf("Verified nonexistence of the elements\n");
+    printf("Test simpleConcurrentNoRebalance passed!\n");
 }
 
-void sequential1() {
-    printf("Starting test sequential1...\n");
+void simpleSequentialNoRebalance() {
+    printf("Starting test simpleSequentialNoRebalance...\n");
     LockFullAVLTree *t = new LockFullAVLTree();
     for (int i = 0; i < 100; i++) {
         t->insert(i);
@@ -126,10 +126,34 @@ void sequential1() {
     for (int i = 0; i < 50; i++) {
         assert(elements[i] == 2 * i + 1);
     }
-    printf("Test sequential1 passed!\n");
+    printf("Test simpleSequentialNoRebalance passed!\n");
+}
+
+void sequentialEnsureRebalanceReducesUnbalanceToZero() {
+    printf("Starting test sequentialEnsureRebalanceReducesUnbalanceToZero...\n");
+    int el = -15, m = 27, h = 30; 
+    // create very unbalanced but not pathological tree by m -> h then el -> m - 1
+    LockFullAVLTree *t = new LockFullAVLTree();
+    for (int i = m; i <= h; i++) {
+        t->insert(i);
+    }
+    for (int i = el; i <= m - 1; i++) {
+        t->insert(i);
+    }
+    long unbalance = t->unbalance();
+    printf("Initial unbalance is: %ld\n", unbalance);
+    while (unbalance > 0) { 
+        // at every rebalance call make sure the unbalance decreased 
+        t->rebalance();
+        int newUnbalance = t->unbalance();
+        assert(newUnbalance < unbalance);
+        unbalance = newUnbalance;
+    }
+    printf("Test sequentialEnsureRebalanceReducesUnbalanceToZero passed!\n");
 }
 
 int main() {
-    sequential1(); 
-    concurrent1();
+    simpleSequentialNoRebalance();
+    simpleConcurrentNoRebalance(); 
+    // sequentialEnsureRebalanceReducesUnbalanceToZero();
 }

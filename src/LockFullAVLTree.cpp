@@ -370,3 +370,7 @@ long LockFullAVLTree::unbalance() {
     unbalanceHelper(root, size(root), unbalance);
     return unbalance;
 }
+
+void LockFullAVLTree::rebalance() {
+    
+}
