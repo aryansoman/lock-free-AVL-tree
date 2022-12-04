@@ -5,11 +5,11 @@
 #include "LockFullAVLTree.hpp"
 
 int lb(LockFullNode *u) {
-    return (u->rbf == -1) ? -1 : 0; 
+    return (u->rbf == -1) ? -1 : 0;
 }
 
 int rb(LockFullNode *u) {
-    return (u->rbf == 1) ? 1 : 0; 
+    return (u->rbf == 1) ? 1 : 0;
 }
 
 LockFullAVLTree::LockFullAVLTree() {
@@ -141,7 +141,7 @@ void LockFullAVLTree::remove(int key) {
                 prev = cur;
                 cur = cur->left;
             }
-            else { 
+            else {
                 cur->lock.unlock();
                 if (prev != NULL) prev->lock.unlock();
                 return;
@@ -198,20 +198,20 @@ void LockFullAVLTree::getElementsHelper(std::vector<int> &elements, LockFullNode
     getElementsHelper(elements, root->left);
     if (root->valid) elements.push_back(root->key);
     getElementsHelper(elements, root->right);
-} 
+}
 
 void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
     // precond: both parent and child are locked, parent->tag == 0, child->tag != 0
-    // precond: other child of parent is locked. 
+    // precond: other child of parent is locked.
     // precond: child of other child of parent on same side as our child is locked
 
     bool isLeft = parent->left == child;
-    
+
     // phase 1: tag value decrease
     if (isLeft) {
         if (child->tag == -1) {
             child->tag = 0;
-            parent->tag = -1 - lb(parent); 
+            parent->tag = -1 - lb(parent);
             parent->rbf++;
         }
         else { // child->tag > 0
@@ -273,7 +273,7 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
                 g->left = g->right;
                 g->tag = 0;
                 g->rbf = rb(g);
-                g->right = s; 
+                g->right = s;
             }
             else { // g->tag == -1
                 int gk = g->key;
@@ -288,7 +288,7 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
                 g->left = g->right;
                 g->tag = 0;
                 g->rbf = rb(g)+1;
-                g->right = s; 
+                g->right = s;
             }
         }
     }
@@ -331,7 +331,7 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
                 g->right = g->left;
                 g->tag = 0;
                 g->rbf = lb(g);
-                g->left = s; 
+                g->left = s;
             }
             else { // g->tag == 1
                 int gk = g->key;
@@ -346,7 +346,7 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
                 g->right = g->left;
                 g->tag = 0;
                 g->rbf = -lb(g)-1;
-                g->left = s; 
+                g->left = s;
             }
         }
     }
@@ -358,12 +358,12 @@ long size(LockFullNode *node) {
     return 1L + size(node->left) + size(node->right);
 }
 
-long unbalanceHelper(LockFullNode *node, long totalSize, long &unbalance) { 
+long unbalanceHelper(LockFullNode *node, long totalSize, long &unbalance) {
     // returns size of subtree, collects unbalance in accum
     if (node == NULL) return 0;
     long sizeHere = 1 + unbalanceHelper(node->left, totalSize, unbalance) + unbalanceHelper(node->right, totalSize, unbalance);
     unbalance += (long)abs(node->tag) * (long)(totalSize - sizeHere);
-    return sizeHere; 
+    return sizeHere;
 }
 
 long LockFullAVLTree::unbalance() {
@@ -375,16 +375,17 @@ long LockFullAVLTree::unbalance() {
 void LockFullAVLTree::rebalance() {
     LockFullNode *p, *c, *s, *g;
 
-    stack<LockFullNode> stack;
-    stack.add(root);
+    std::stack<LockFullNode *> stack;
+    stack.push(root);
 
     while (stack.empty() == false) {
-        p = stack.pop();
+        p = stack.top();
+        stack.pop();
         if (p->left != NULL) {
-            stack.add(p->left);
+            stack.push(p->left);
         }
         if (p->right != NULL) {
-            stack.add(p->right);
+            stack.push(p->right);
         }
 
         if (p->tag == 0) {
@@ -420,4 +421,5 @@ void LockFullAVLTree::rebalance() {
             }
         }
     }
+    return;
 }

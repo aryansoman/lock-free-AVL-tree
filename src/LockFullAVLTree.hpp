@@ -1,5 +1,6 @@
 #include <mutex>
 #include <vector>
+#include <stack>
 
 struct LockFullNode {
     int key;
@@ -20,7 +21,7 @@ struct LockFullNode {
 };
 
 class LockFullAVLTree {
-public: 
+public:
     LockFullAVLTree();
     void insert(int key);
     void remove(int key);
