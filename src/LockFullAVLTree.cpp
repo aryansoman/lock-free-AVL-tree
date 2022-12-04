@@ -1,5 +1,6 @@
 #include <mutex>
 #include <vector>
+#include <stack>
 
 #include "LockFullAVLTree.hpp"
 
@@ -372,5 +373,51 @@ long LockFullAVLTree::unbalance() {
 }
 
 void LockFullAVLTree::rebalance() {
-    
+    LockFullNode *p, *c, *s, *g;
+
+    stack<LockFullNode> stack;
+    stack.add(root);
+
+    while (stack.empty() == false) {
+        p = stack.pop();
+        if (p->left != NULL) {
+            stack.add(p->left);
+        }
+        if (p->right != NULL) {
+            stack.add(p->right);
+        }
+
+        if (p->tag == 0) {
+            c = p->left;
+            if (c->tag != 0) {
+                s = p->right;
+                g = c->right;
+                p->lock.lock();
+                c->lock.lock();
+                s->lock.lock();
+                g->lock.lock();
+                rebalanceAt(p, c);
+                p->lock.unlock();
+                c->lock.unlock();
+                s->lock.unlock();
+                g->lock.unlock();
+                return;
+            }
+            c = p->right;
+            if (c->tag != 0) {
+                s = p->left;
+                g = c->left;
+                p->lock.lock();
+                c->lock.lock();
+                s->lock.lock();
+                g->lock.lock();
+                rebalanceAt(p, c);
+                p->lock.unlock();
+                c->lock.unlock();
+                s->lock.unlock();
+                g->lock.unlock();
+                return;
+            }
+        }
+    }
 }
