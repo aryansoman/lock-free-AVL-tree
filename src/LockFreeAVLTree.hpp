@@ -1,6 +1,3 @@
-#include <mutex>
-#include <vector>
-
 // rotate op states
 #define UNDECIDED 0
 #define GRABBED 1
@@ -20,14 +17,28 @@ struct InsertOp {
     bool isUpdate = false;
     LockFreeNode *expectedNode;
     LockFreeNode *newNode;
+    InsertOp(bool il, LockFreeNode *en, LockFreeNode *nn) {
+        isLeft = il;
+        expectedNode = en;
+        newNode = nn;
+    }
 };
 
 struct RotateOp {
     volatile int state = UNDECIDED;
     LockFreeNode *parent, *node, *child;
     Op *pOp, *nOp, *cOp;
-    bool rightR;
-    bool dir;
+    bool dir, rightR;
+    RotateOp(LockFreeNode *p, LockFreeNode *n, LockFreeNode *c, Op *pop, Op *nop, Op *cop, bool d, bool rr) {
+        parent = p;
+        node = n;
+        child = c;
+        pOp = pop;
+        nOp = nop;
+        cOp = cop;
+        dir = d;
+        rightR = rr;
+    }
 };
 
 union Op {
@@ -44,12 +55,14 @@ struct LockFreeNode {
 };
 
 // operation status interactions
-static inline void UNFLAG(Op *&op) {
+static inline Op *UNFLAG(Op *&op) {
     op = (Op*)((long)op & (~0x11L));
+    return op;
 }
-static inline void FLAG(Op *&op, long status) {
+static inline Op *FLAG(Op *&op, long status) {
     UNFLAG(op);
     op = (Op*)((long)op | status);
+    return op;
 }
 static inline long GETFLAG(Op *op) {
     return (long)op & 0x11L;
@@ -65,4 +78,10 @@ public:
 private:
     LockFreeNode *root;
     int seek(int key, LockFreeNode **parent, Op **parentOp, LockFreeNode **node, Op **nodeOp, LockFreeNode *auxRoot);
+    int leftRotate(LockFreeNode *parent, int dir, bool rotate);
+    int rightRotate(LockFreeNode *parent, int dir, bool rotate);
+    void help(LockFreeNode *parent, Op *parentOp, LockFreeNode *node, Op *nodeOp);
+    void helpInsert(Op *op, LockFreeNode)
+    void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node);
+    void helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child);
 };
