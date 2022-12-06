@@ -3,6 +3,140 @@
 
 #include "LockFreeAVLTree.hpp"
 
+#define FOUND 0
+#define NOT_FOUND_L 1
+#define NOT_FOUND_R 2
+
+bool LockFreeAVLTree::search(int key) {
+    LockFreeNode *node = root;
+    LockFreeNode *next = node->right;
+    Op *nodeOp = node->op;
+    int nodeKey;
+    bool res = false;
+    while (next != NULL) {
+        node = next;
+        nodeOp = node->op;
+        nodeKey = node->key;
+        if (key < nodeKey) {
+            next = node->left;
+        }
+        else if (key > nodeKey) {
+            next = node->right;
+        }
+        else {
+            res = true;
+            break;
+        }
+    }
+    if (res && node->deleted) {
+        if (GETFLAG(node->op) == INSERT) {
+            if (nodeOp->insertOp.newNode->key == key) {
+                return true;
+            }
+            return false;
+        }
+    }
+    return res;
+}
+
+int LockFreeAVLTree::seek(int key, LockFreeNode **parent, Op **parentOp, LockFreeNode **node, Op **nodeOp, LockFreeNode *auxRoot) {
+    int res, nodeKey;
+    LockFreeNode *next;
+    retry:
+    res = NOT_FOUND_L;
+    *node = auxRoot;
+    *nodeOp = (*node)->op;
+    if (GETFLAG(*nodeOp) != NONE) {
+        if (auxRoot == root) {
+            help_insert((Op*)UNFLAG(*nodeOp), *node);
+            goto retry;
+        }
+    }
+    next = (LockFreeNode*)(*node)->right;
+    while (next != NULL) {
+        *parent = *node;
+        *parentOp = *nodeOp;
+        *node = next;
+        *nodeOp = (*node)->op;
+        nodeKey = (*node)->key;
+        if (key < nodeKey) {
+            res = NOT_FOUND_L;
+            next = (*node)->left;
+        }
+        else if (key > nodeKey) {
+            res = NOT_FOUND_R;
+            next = (*node)->right;
+        }
+        else {
+            res = FOUND;
+            break;
+        }
+    }
+    if (GETFLAG(*nodeOp) != NONE) {
+        help(*parent, *parentOp, *node, *nodeOp);
+        goto retry;
+    }
+    return res;
+}
+
+bool LockFreeAVLTree::insert(int key) {
+    LockFreeNode *parent, *node;
+    LockFreeNode *newNode = NULL;
+    Op *parentOp, *nodeOp, *casOp;
+    int res;
+    while (true) {
+        res = seek(key, &parent, &parentOp, &node, &nodeOp, root);
+        if (res == FOUND && !node->deleted) {
+            return false;
+        }
+        if (newNode == NULL) {
+            newNode = alloc_node(key);
+        }
+        bool isLeft = (res == NOT_FOUND_L);
+        LockFreeNode *oldNode;
+        if (isLeft) {
+            oldNode = node->left;
+        }
+        else {
+            oldNode = node->right;
+        }
+        casOp = alloc_op();
+        if (res == FOUND && node->deleted) {
+            casOp->insertOp.isUpdate = true;
+        }
+        casOp->insertOp.isLeft = isLeft;
+        casOp->insertOp.expectedNode = oldNode;
+        casOp->insertOp.newNode = newNode;
+        if (CAS(&(node->op), nodeOp, FLAG(casOp, INSERT)) == nodeOp) {
+            help_insert(casOp, node);
+            return true;
+        }
+    }
+}
+
+bool LockFreeAVLTree::remove(int key) {
+    LockFreeNode *parent, *node;
+    Op *parentOp, nodeOp;
+    while (true) {
+        int res = seek(key, &parent, &parentOp, &node, &nodeOp, root);
+        if (res != FOUND) {
+            return false;
+        }
+        if (node->deleted) {
+            if (GETFLAG(node->op) != INSERT) {
+                return false;
+            }
+        }
+        else {
+            if (GETFLAG(node->op) == NONE) {
+                if (CAS(&(node->deleted), false, true) == false) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+
 void LockFreeAVLTree::help(LockFreeNode *parent, Op *parentOp, LockFreeNode *node, Op *nodeOp) {
 
 }
