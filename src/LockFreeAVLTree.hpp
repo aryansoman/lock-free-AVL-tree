@@ -1,3 +1,5 @@
+#include <atomic>
+
 // rotate op states
 #define UNDECIDED 0
 #define GRABBED 1
@@ -25,9 +27,10 @@ struct InsertOp {
 };
 
 struct RotateOp {
-    volatile int state = UNDECIDED;
+    std::atomic<int> state{UNDECIDED};
     LockFreeNode *parent, *node, *child;
-    Op *pOp, *nOp, *cOp;
+    std::atomic<Op*> pOp;
+    Op *nOp, *cOp;
     bool dir, rightR;
     RotateOp(LockFreeNode *p, LockFreeNode *n, LockFreeNode *c, Op *pop, Op *nop, Op *cop, bool d, bool rr) {
         parent = p;
@@ -48,8 +51,8 @@ union Op {
 
 struct LockFreeNode {
     int key;
-    LockFreeNode *left, *right;
-    Op *op;
+    std::atomic<LockFreeNode*> left, right;
+    std::atomic<Op*> op;
     int localHeight, lh, rh;
     bool deleted, removed;
 };
@@ -81,7 +84,7 @@ private:
     int leftRotate(LockFreeNode *parent, int dir, bool rotate);
     int rightRotate(LockFreeNode *parent, int dir, bool rotate);
     void help(LockFreeNode *parent, Op *parentOp, LockFreeNode *node, Op *nodeOp);
-    void helpInsert(Op *op, LockFreeNode)
+    void helpInsert(Op *op, LockFreeNode);
     void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node);
-    void helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child);
+    bool helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child);
 };
