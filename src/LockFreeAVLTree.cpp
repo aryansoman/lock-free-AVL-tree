@@ -138,7 +138,40 @@ bool LockFreeAVLTree::remove(int key) {
 }
 
 void LockFreeAVLTree::help(LockFreeNode *parent, Op *parentOp, LockFreeNode *node, Op *nodeOp) {
+    switch (GETFLAG(nodeOp)) {
+        case INSERT:
+            helpInsert(UNFLAG(nodeOp), node);
+            break;
+        case ROTATE:
+            helpRotate(UNFLAG(parentOp), parent, node, parentOp->rotateOp.child);
+            break;
+        case MARK:
+            helpMarked(parent, parentOp, node);
+    } 
+}
 
+void helpInsert(Op *op, LockFreeNode *dest) {
+    if (op->insertOp.isUpdate) {
+        bool expected = true;
+        (dest->deleted).compare_exchange_strong(expected, false);
+    }
+    else {
+        std::atomic<LockFreeNode*> *address = op->insertOp.isLeft ? &dest->left : &dest->right;
+        LockFreeNode *expected = op->insertOp.expectedNode;
+        (*address).compare_exchange_strong(expected, op->insertOp.newNode);
+    }
+    Op *expected = FLAG(op, INSERT);
+    (dest->op).compare_exchange_strong(expected, FLAG(op, NONE));
+}
+
+void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node) {
+    LockFreeNode *child = (node->left == NULL) ? ((node->right == NULL) ? NULL : node->right.load()) : node->left.load();
+    node->removed = true;
+    Op *casOp = (Op *) (new InsertOp(node == parent->left, node, child));
+    Op *expected = parent->op;
+    if ((parent->op).compare_exchange_strong(expected, FLAG(casOp, INSERT))) {
+        helpInsert(casOp, parent);
+    }
 }
 
 bool LockFreeAVLTree::helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child) {

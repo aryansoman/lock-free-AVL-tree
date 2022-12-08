@@ -54,17 +54,16 @@ struct LockFreeNode {
     std::atomic<LockFreeNode*> left, right;
     std::atomic<Op*> op;
     int localHeight, lh, rh;
-    bool deleted, removed;
+    std::atomic<bool> deleted, removed;
 };
 
 // operation status interactions
-static inline Op *UNFLAG(Op *&op) {
+static inline Op *UNFLAG(Op *op) {
     op = (Op*)((long)op & (~0x11L));
     return op;
 }
-static inline Op *FLAG(Op *&op, long status) {
-    UNFLAG(op);
-    op = (Op*)((long)op | status);
+static inline Op *FLAG(Op *op, long status) {
+    op = (Op*)((long)(UNFLAG(op)) | status);
     return op;
 }
 static inline long GETFLAG(Op *op) {
@@ -84,7 +83,7 @@ private:
     int leftRotate(LockFreeNode *parent, int dir, bool rotate);
     int rightRotate(LockFreeNode *parent, int dir, bool rotate);
     void help(LockFreeNode *parent, Op *parentOp, LockFreeNode *node, Op *nodeOp);
-    void helpInsert(Op *op, LockFreeNode);
+    void helpInsert(Op *op, LockFreeNode *dest);
     void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node);
     bool helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child);
 };
