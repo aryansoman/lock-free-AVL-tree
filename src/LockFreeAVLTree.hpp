@@ -1,4 +1,5 @@
 #include <atomic>
+#include <cstddef>
 
 // rotate op states
 #define UNDECIDED 0
@@ -51,10 +52,10 @@ union Op {
 
 struct LockFreeNode {
     int key;
-    std::atomic<LockFreeNode*> left, right;
-    std::atomic<Op*> op;
+    std::atomic<LockFreeNode*> left{NULL}, right{NULL};
+    std::atomic<Op*> op{NULL};
     int localHeight, lh, rh;
-    std::atomic<bool> deleted, removed;
+    std::atomic<bool> deleted{false}, removed{false};
 };
 
 // operation status interactions

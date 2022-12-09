@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
 
@@ -6,6 +7,12 @@
 #define FOUND 0
 #define NOT_FOUND_L 1
 #define NOT_FOUND_R 2
+
+void updateHeights(LockFreeNode *node) {
+    node->lh = node->left == NULL ? 0 : node->left.load()->localHeight;
+    node->rh = node->right == NULL ? 0 : node->right.load()->localHeight;
+    node->localHeight = 1 + std::max(node->lh, node->rh);
+}
 
 bool LockFreeAVLTree::search(int key) {
     LockFreeNode *node = root;
@@ -214,29 +221,57 @@ bool LockFreeAVLTree::helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *nod
         }
     }
     if (seenState == GRABBED) {
+        // create a newNode identical to node (except children, which will be diff)
+        LockFreeNode *newNode = new LockFreeNode();
+        newNode->key = op->rotateOp.node->key;
+        newNode->localHeight = op->rotateOp.node->localHeight;
+        newNode->lh = op->rotateOp.node->lh;
+        newNode->rh = op->rotateOp.node->rh;
+        bool expBool = false;
+        newNode->deleted.compare_exchange_strong(expBool, op->rotateOp.node->deleted.load());
+        newNode->removed.compare_exchange_strong(expBool, op->rotateOp.node->removed.load());
+        Op *expectedOp = NULL;
+        newNode->op.compare_exchange_strong(expectedOp, op->rotateOp.node->op.load());
+        LockFreeNode *expected = NULL;
+        // swap around pointers for rotation
         if (op->rotateOp.rightR) {
-            //TODO: // right rotate
-        }
-        else {
-            //TODO: // left rotate
-        }
-
-        // parent pointer swing
-        LockFreeNode *expected = op->rotateOp.node;
-        if (op->rotateOp.rightR) {
+            // right rotate
+            newNode->left.compare_exchange_strong(expected, op->rotateOp.child->right.load());
+            newNode->right.compare_exchange_strong(expected, op->rotateOp.node->right.load());
+            expected = op->rotateOp.child->right;
+            child->right.compare_exchange_strong(expected, newNode);
+            // parent pointer swing
+            expected = op->rotateOp.node;
             op->rotateOp.parent->left.compare_exchange_strong(expected, child);
         }
         else {
+            // left rotate symmetrical to above case
+            newNode->right.compare_exchange_strong(expected, op->rotateOp.child->left.load());
+            newNode->left.compare_exchange_strong(expected, op->rotateOp.node->left.load());
+            expected = op->rotateOp.child->left;
+            child->left.compare_exchange_strong(expected, newNode);
+            // parent pointer swing
+            expected = op->rotateOp.node;
             op->rotateOp.parent->right.compare_exchange_strong(expected, child);
         }
 
-        // adjust child and parent heights
+        // TODO: adjust child and parent heights
+        updateHeights(op->rotateOp.child);
+        updateHeights(op->rotateOp.parent);
+
+        // adjust operation state
         int expectedInt = GRABBED;
         op->rotateOp.state.compare_exchange_strong(expectedInt, ROTATED);
         seenState = ROTATED;
     }
     if (seenState == ROTATED) {
-        //TODO: // clear parent, node, child operation
+        // clear operation fields
+        Op *expected = op->rotateOp.parent->op;
+        op->rotateOp.parent->op.compare_exchange_strong(expected, FLAG(op->rotateOp.parent->op, NONE));
+        expected = op->rotateOp.node->op;
+        op->rotateOp.node->op.compare_exchange_strong(expected, FLAG(op->rotateOp.node->op, NONE));
+        expected = op->rotateOp.child->op;
+        op->rotateOp.child->op.compare_exchange_strong(expected, FLAG(op->rotateOp.child->op, NONE));
     }
     return seenState == ROTATED;
 }
