@@ -1,4 +1,4 @@
-#include <algorithm>
+#include <algorithm>11:05
 #include <atomic>
 #include <cstddef>
 
@@ -114,7 +114,7 @@ bool LockFreeAVLTree::insert(int key) {
         casOp->insertOp.isLeft = isLeft;
         casOp->insertOp.expectedNode = oldNode;
         casOp->insertOp.newNode = newNode;
-        if (CAS(&(node->op), nodeOp, FLAG(casOp, INSERT)) == nodeOp) {
+        if ((node->op).compare_exchange_strong(nodeOp, FLAG(casOp, INSERT))) {
             help_insert(casOp, node);
             return true;
         }
@@ -136,7 +136,7 @@ bool LockFreeAVLTree::remove(int key) {
         }
         else {
             if (GETFLAG(node->op) == NONE) {
-                if (CAS(&(node->deleted), false, true) == false) {
+                if (!(node->deleted).compare_exchange_strong(false, true)) {
                     return true;
                 }
             }
@@ -154,7 +154,7 @@ void LockFreeAVLTree::help(LockFreeNode *parent, Op *parentOp, LockFreeNode *nod
             break;
         case MARK:
             helpMarked(parent, parentOp, node);
-    } 
+    }
 }
 
 void helpInsert(Op *op, LockFreeNode *dest) {
@@ -183,7 +183,7 @@ void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node) {
 
 bool LockFreeAVLTree::helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child) {
     int seenState = op->rotateOp.state;
-    retry: 
+    retry:
     if (seenState == UNDECIDED) {
         if (GETFLAG(node->op) == NONE || GETFLAG(node->op) == ROTATE) {
             if (GETFLAG(node->op) == NONE) {
