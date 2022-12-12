@@ -8,6 +8,10 @@
 #define NOT_FOUND_L 1
 #define NOT_FOUND_R 2
 
+LockFreeAVLTree::LockFreeAVLTree() {
+    root = NULL;
+}
+
 void updateHeights(LockFreeNode *node) {
     node->lh = node->left == NULL ? 0 : node->left.load()->localHeight;
     node->rh = node->right == NULL ? 0 : node->right.load()->localHeight;

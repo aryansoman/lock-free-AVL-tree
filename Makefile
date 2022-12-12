@@ -1,13 +1,22 @@
-all: main.exe
+all: LockFull.exe LockFree.exe 
 
-main.exe: correctness.o LockFullAVLTree.o
-	g++ -o main.exe correctness.o LockFullAVLTree.o
+LockFull.exe: LockFullSrc.o LockFullTst.o
+	g++ -o LockFull.exe LockFullSrc.o LockFullTst.o
 
-correctness.o: tst/correctness.cpp
-	g++ -Isrc -c tst/correctness.cpp
+LockFullSrc.o: src/LockFullAVLTree.cpp
+	g++ -o LockFullSrc.o -c src/LockFullAVLTree.cpp
 
-LockFullAVLTree.o: src/LockFullAVLTree.cpp
-	g++ -c src/LockFullAVLTree.cpp
+LockFullTst.o: tst/LockFullTest.cpp
+	g++ -o LockFullTst.o -Isrc -c tst/LockFullTest.cpp
+
+LockFree.exe: LockFreeSrc.o LockFreeTst.o
+	g++ -o LockFree.exe LockFreeSrc.o LockFreeTst.o
+
+LockFreeSrc.o: src/LockFreeAVLTree.cpp
+	g++ -o LockFreeSrc.o -c src/LockFreeAVLTree.cpp
+
+LockFreeTst.o: tst/LockFreeTest.cpp
+	g++ -o LockFreeTst.o -Isrc -c tst/LockFreeTest.cpp
 
 clean:
-	rm main.exe correctness.o LockFullAVLTree.o
+	rm LockFree.exe LockFull.exe LockFullSrc.o LockFullTst.o LockFreeSrc.o LockFreeTst.o
