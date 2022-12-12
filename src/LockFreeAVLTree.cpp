@@ -9,9 +9,26 @@
 #define NOT_FOUND_L 1
 #define NOT_FOUND_R 2
 
+#define TREE_MIN (-(1 << 29))
+#define TREE_MAX (1 << 29)
+
 LockFreeAVLTree::LockFreeAVLTree() {
-    root = new LockFreeNode(-(1 << 29), 2, 0, 1);
-    root->right = new LockFreeNode(1 << 29, 1, 0, 0);
+    root = new LockFreeNode(TREE_MIN, 2, 0, 1);
+    root->right = new LockFreeNode(TREE_MAX, 1, 0, 0);
+}
+
+void getElementsHelper(std::vector<int> &elements, LockFreeNode *node) {
+    if (node == NULL) return;
+    getElementsHelper(elements, node->left);
+    if (!node->deleted && node->key < TREE_MAX && node->key > TREE_MIN) {
+        elements.push_back(node->key);
+    }
+    getElementsHelper(elements, node->right);
+}
+
+void LockFreeAVLTree::getElements(std::vector<int> &elements) {
+    elements.clear();
+    getElementsHelper(elements, root);
 }
 
 void updateHeights(LockFreeNode *node) {

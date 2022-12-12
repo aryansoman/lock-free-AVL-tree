@@ -1,5 +1,6 @@
 #include <atomic>
 #include <cstddef>
+#include <vector>
 
 // rotate op states
 #define UNDECIDED 0
@@ -84,6 +85,7 @@ public:
     bool insert(int key);
     bool remove(int key);
     bool search(int key);
+    void getElements(std::vector<int> &elements); // not thread safe
 private:
     LockFreeNode *root;
     int seek(int key, LockFreeNode **parent, Op **parentOp, LockFreeNode **node, Op **nodeOp, LockFreeNode *auxRoot);
