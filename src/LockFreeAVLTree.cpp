@@ -1,4 +1,4 @@
-#include <algorithm>11:05
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
 
@@ -55,7 +55,7 @@ int LockFreeAVLTree::seek(int key, LockFreeNode **parent, Op **parentOp, LockFre
     *nodeOp = (*node)->op;
     if (GETFLAG(*nodeOp) != NONE) {
         if (auxRoot == root) {
-            help_insert((Op*)UNFLAG(*nodeOp), *node);
+            helpInsert((Op*)UNFLAG(*nodeOp), *node);
             goto retry;
         }
     }
@@ -97,7 +97,7 @@ bool LockFreeAVLTree::insert(int key) {
             return false;
         }
         if (newNode == NULL) {
-            newNode = alloc_node(key);
+            newNode = new LockFreeNode(key, 1, 0, 0);
         }
         bool isLeft = (res == NOT_FOUND_L);
         LockFreeNode *oldNode;
@@ -107,15 +107,13 @@ bool LockFreeAVLTree::insert(int key) {
         else {
             oldNode = node->right;
         }
-        casOp = alloc_op();
+        casOp = (Op *) (new InsertOp(isLeft, oldNode, newNode));
         if (res == FOUND && node->deleted) {
             casOp->insertOp.isUpdate = true;
         }
-        casOp->insertOp.isLeft = isLeft;
-        casOp->insertOp.expectedNode = oldNode;
-        casOp->insertOp.newNode = newNode;
-        if ((node->op).compare_exchange_strong(nodeOp, FLAG(casOp, INSERT))) {
-            help_insert(casOp, node);
+        Op* expected = nodeOp;
+        if ((node->op).compare_exchange_strong(expected, FLAG(casOp, INSERT))) {
+            helpInsert(casOp, node);
             return true;
         }
     }
@@ -123,7 +121,7 @@ bool LockFreeAVLTree::insert(int key) {
 
 bool LockFreeAVLTree::remove(int key) {
     LockFreeNode *parent, *node;
-    Op *parentOp, nodeOp;
+    Op *parentOp, *nodeOp;
     while (true) {
         int res = seek(key, &parent, &parentOp, &node, &nodeOp, root);
         if (res != FOUND) {
@@ -136,7 +134,8 @@ bool LockFreeAVLTree::remove(int key) {
         }
         else {
             if (GETFLAG(node->op) == NONE) {
-                if (!(node->deleted).compare_exchange_strong(false, true)) {
+                bool expected = false;
+                if ((node->deleted).compare_exchange_strong(expected, true)) {
                     return true;
                 }
             }
@@ -222,11 +221,8 @@ bool LockFreeAVLTree::helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *nod
     }
     if (seenState == GRABBED) {
         // create a newNode identical to node (except children, which will be diff)
-        LockFreeNode *newNode = new LockFreeNode();
-        newNode->key = op->rotateOp.node->key;
-        newNode->localHeight = op->rotateOp.node->localHeight;
-        newNode->lh = op->rotateOp.node->lh;
-        newNode->rh = op->rotateOp.node->rh;
+        LockFreeNode *newNode = new LockFreeNode(op->rotateOp.node->key, op->rotateOp.node->localHeight, 
+                                                    op->rotateOp.node->lh, op->rotateOp.node->rh);
         bool expBool = false;
         newNode->deleted.compare_exchange_strong(expBool, op->rotateOp.node->deleted.load());
         newNode->removed.compare_exchange_strong(expBool, op->rotateOp.node->removed.load());
@@ -317,3 +313,4 @@ int LockFreeAVLTree::rightRotate(LockFreeNode *parent, int dir, bool rotate) {
     }
     return 1;
 }
+

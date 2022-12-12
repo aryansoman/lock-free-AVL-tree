@@ -56,6 +56,12 @@ struct LockFreeNode {
     std::atomic<Op*> op{NULL};
     int localHeight, lh, rh;
     std::atomic<bool> deleted{false}, removed{false};
+    LockFreeNode(int k, int locH, int el, int r) {
+        key = k;
+        localHeight = locH;
+        lh = el;
+        rh = r;
+    }
 };
 
 // operation status interactions
@@ -75,8 +81,8 @@ static inline long GETFLAG(Op *op) {
 class LockFreeAVLTree {
 public: 
     LockFreeAVLTree();
-    void insert(int key);
-    void remove(int key);
+    bool insert(int key);
+    bool remove(int key);
     bool search(int key);
 private:
     LockFreeNode *root;
