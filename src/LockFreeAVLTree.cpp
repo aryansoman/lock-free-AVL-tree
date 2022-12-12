@@ -156,7 +156,7 @@ void LockFreeAVLTree::help(LockFreeNode *parent, Op *parentOp, LockFreeNode *nod
     }
 }
 
-void helpInsert(Op *op, LockFreeNode *dest) {
+void LockFreeAVLTree::helpInsert(Op *op, LockFreeNode *dest) {
     if (op->insertOp.isUpdate) {
         bool expected = true;
         (dest->deleted).compare_exchange_strong(expected, false);
@@ -170,7 +170,7 @@ void helpInsert(Op *op, LockFreeNode *dest) {
     (dest->op).compare_exchange_strong(expected, FLAG(op, NONE));
 }
 
-void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node) {
+void LockFreeAVLTree::helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node) {
     LockFreeNode *child = (node->left == NULL) ? ((node->right == NULL) ? NULL : node->right.load()) : node->left.load();
     node->removed = true;
     Op *casOp = (Op *) (new InsertOp(node == parent->left, node, child));
