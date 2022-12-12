@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <cstdio>
 
 #include "LockFreeAVLTree.hpp"
 
@@ -9,7 +10,8 @@
 #define NOT_FOUND_R 2
 
 LockFreeAVLTree::LockFreeAVLTree() {
-    root = NULL;
+    root = new LockFreeNode(-(1 << 29), 2, 0, 1);
+    root->right = new LockFreeNode(1 << 29, 1, 0, 0);
 }
 
 void updateHeights(LockFreeNode *node) {
@@ -44,8 +46,8 @@ bool LockFreeAVLTree::search(int key) {
             if (nodeOp->insertOp.newNode->key == key) {
                 return true;
             }
-            return false;
         }
+        return false;
     }
     return res;
 }

@@ -9,8 +9,8 @@ void simpleSequentialNoRebalance() {
     printf("Starting test simpleSequentialNoRebalance...\n");
     LockFreeAVLTree *t = new LockFreeAVLTree();
     for (int i = 0; i < 100; i++) {
-        assert(!t->insert(i));
         assert(t->insert(i));
+        assert(!t->insert(i));
     }
     for (int i = 0; i < 100; i++) {
         assert(t->search(i));
