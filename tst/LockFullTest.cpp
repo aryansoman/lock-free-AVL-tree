@@ -23,14 +23,14 @@ void *processCommand1(void *command) {
     for (int i = comm->tid; i < comm->totalElements; i += NUM_THREADS) {
         switch (comm->type) {
             case INSERT_TYPE:
-                comm->t->insert(i);
+                assert(comm->shouldFind != comm->t->insert(i));
                 break;
             case SEARCH_TYPE:
                 assert(comm->shouldFind == comm->t->search(i));
                 break;
             default:
                 assert(comm->type == REMOVE_TYPE);
-                comm->t->remove(i);
+                assert(comm->shouldFind == comm->t->remove(i));
         }
     }
     comm->done = true;
@@ -126,15 +126,15 @@ void simpleSequentialNoRebalance() {
     printf("Starting test simpleSequentialNoRebalance...\n");
     LockFullAVLTree *t = new LockFullAVLTree();
     for (int i = 0; i < 100; i++) {
-        t->insert(i);
-        t->insert(i);
+        assert(t->insert(i));
+        assert(!t->insert(i));
     }
     for (int i = 0; i < 100; i++) {
         assert(t->search(i));
     }
     for (int i = 0; i < 100; i += 2) {
-        t->remove(i);
-        t->remove(i);
+        assert(t->remove(i));
+        assert(!t->remove(i));
     }
     for (int i = 0; i < 100; i++) {
         assert(t->search(i) == (i % 2 == 1));
@@ -154,10 +154,10 @@ void sequentialEnsureRebalanceReducesUnbalanceToZero() {
     // create very unbalanced but not pathological tree by m -> h then el -> m - 1
     LockFullAVLTree *t = new LockFullAVLTree();
     for (int i = m; i <= h; i++) {
-        t->insert(i);
+        assert(t->insert(i));
     }
     for (int i = el; i <= m - 1; i++) {
-        t->insert(i);
+        assert(t->insert(i));
     }
     long unbalance = t->unbalance();
     printf("Initial unbalance is: %ld\n", unbalance);

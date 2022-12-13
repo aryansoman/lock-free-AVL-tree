@@ -23,8 +23,8 @@ struct LockFullNode {
 class LockFullAVLTree {
 public:
     LockFullAVLTree();
-    void insert(int key);
-    void remove(int key);
+    bool insert(int key);
+    bool remove(int key);
     bool search(int key);
     void rebalance();
     void getElements(std::vector<int> &elements); // not thread-safe, use only for testing

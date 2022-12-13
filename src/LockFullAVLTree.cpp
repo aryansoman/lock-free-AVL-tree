@@ -50,8 +50,7 @@ bool LockFullAVLTree::search(int key) {
     return found;
 }
 
-void LockFullAVLTree::insert(int key) {
-    // printf("inserting key %d\n", key);
+bool LockFullAVLTree::insert(int key) {
     root->lock.lock();
     LockFullNode *cur = root;
     LockFullNode *prev = NULL;
@@ -60,7 +59,7 @@ void LockFullAVLTree::insert(int key) {
         if (cur->valid && key == cur->key) {
             cur->lock.unlock();
             if (prev != NULL) prev->lock.unlock();
-            return;
+            return false;
         }
         if (key <= cur->key) {
             if (cur->left != NULL) {
@@ -70,16 +69,16 @@ void LockFullAVLTree::insert(int key) {
                 cur = cur->left;
             }
             else {
-		if (prev != NULL) prev->lock.unlock();
-		LockFullNode *curCopy = new LockFullNode(cur->key, cur->valid, 0, cur->rbf);
-                cur->key = key;
-		cur->tag--;
-		cur->rbf = 0;
-		cur->valid = false;
-		cur->right = curCopy;
-		cur->left = new LockFullNode(key, true, 0, 0);
-		cur->lock.unlock();
-                return;
+                if (prev != NULL) prev->lock.unlock();
+                LockFullNode *curCopy = new LockFullNode(cur->key, cur->valid, 0, cur->rbf);
+                        cur->key = key;
+                cur->tag--;
+                cur->rbf = 0;
+                cur->valid = false;
+                cur->right = curCopy;
+                cur->left = new LockFullNode(key, true, 0, 0);
+                cur->lock.unlock();
+                return true;
             }
         }
         else {
@@ -90,27 +89,27 @@ void LockFullAVLTree::insert(int key) {
                 cur = cur->right;
             }
             else {
-		if (prev != NULL) prev->lock.unlock();
-		LockFullNode *curCopy = new LockFullNode(cur->key, cur->valid, 0, cur->rbf);
-		cur->tag--;
-		cur->rbf = 0;
-		cur->valid = false;
-		cur->left = curCopy;
-		cur->right = new LockFullNode(key, true, 0, 0);
-		cur->lock.unlock();
-                return;
+                if (prev != NULL) prev->lock.unlock();
+                LockFullNode *curCopy = new LockFullNode(cur->key, cur->valid, 0, cur->rbf);
+                cur->tag--;
+                cur->rbf = 0;
+                cur->valid = false;
+                cur->left = curCopy;
+                cur->right = new LockFullNode(key, true, 0, 0);
+                cur->lock.unlock();
+                return true;
             }
         }
     }
 }
 
-void LockFullAVLTree::remove(int key) {
+bool LockFullAVLTree::remove(int key) {
     root->lock.lock();
     LockFullNode *cur = root;
     LockFullNode *prev = NULL;
     while (true) {
-        // in tree
         if (key <= cur->key) {
+            // in tree
             if (cur->left != NULL) {
                 cur->left->lock.lock();
                 if (cur->left->valid && cur->left->key == key) { // found
@@ -135,7 +134,7 @@ void LockFullAVLTree::remove(int key) {
                     cur->right->lock.unlock();
                     cur->lock.unlock();
                     if (prev != NULL) prev->lock.unlock();
-                    return;
+                    return true;
                 }
                 if (prev != NULL) prev->lock.unlock();
                 prev = cur;
@@ -144,7 +143,7 @@ void LockFullAVLTree::remove(int key) {
             else {
                 cur->lock.unlock();
                 if (prev != NULL) prev->lock.unlock();
-                return;
+                return false;
             }
         }
         else {
@@ -172,7 +171,7 @@ void LockFullAVLTree::remove(int key) {
                     cur->right->lock.unlock();
                     cur->lock.unlock();
                     if (prev != NULL) prev->lock.unlock();
-                    return;
+                    return true;
                 }
                 if (prev != NULL) prev->lock.unlock();
                 prev = cur;
@@ -181,7 +180,7 @@ void LockFullAVLTree::remove(int key) {
             else {
                 cur->lock.unlock();
                 if (prev != NULL) prev->lock.unlock();
-                return;
+                return false;
             }
         }
     }
