@@ -32,8 +32,8 @@ void LockFreeAVLTree::getElements(std::vector<int> &elements) {
 }
 
 void updateHeights(LockFreeNode *node) {
-    node->lh = node->left == NULL ? 0 : node->left.load()->localHeight;
-    node->rh = node->right == NULL ? 0 : node->right.load()->localHeight;
+    node->lh = node->left.load() == NULL ? 0 : node->left.load()->localHeight;
+    node->rh = node->right.load() == NULL ? 0 : node->right.load()->localHeight;
     node->localHeight = 1 + std::max(node->lh, node->rh);
 }
 
@@ -274,7 +274,7 @@ bool LockFreeAVLTree::helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *nod
             op->rotateOp.parent->right.compare_exchange_strong(expected, child);
         }
 
-        // TODO: adjust child and parent heights
+        // adjust child and parent heights
         updateHeights(op->rotateOp.child);
         updateHeights(op->rotateOp.parent);
 
@@ -320,7 +320,7 @@ int LockFreeAVLTree::rightRotate(LockFreeNode *parent, int dir, bool rotate) {
     if (parent->removed) {
         return 0;
     }
-    LockFreeNode *node = (dir == 1) ? parent->left : parent->right;
+    LockFreeNode *node = (dir == 1) ? parent->right : parent->left;
     if (node == NULL || node->left == NULL) {
         return 0;
     }
@@ -337,6 +337,44 @@ int LockFreeAVLTree::rightRotate(LockFreeNode *parent, int dir, bool rotate) {
     return 1;
 }
 
+void LockFreeAVLTree::helpRebalance(LockFreeNode *parent, LockFreeNode *node, int dir) {
+    if (node->deleted && (node->left == NULL || node->right == NULL)) {
+        Op *expected = node->op;
+        if ((node->op).compare_exchange_strong(expected, FLAG(node->op, MARK))) {
+            helpMarked(parent, parent->op, node);
+        }
+    }
+    updateHeights(node);
+    updateHeights(parent);
+    int hd = node->rh - node->lh;
+    // rotation conditions
+    if (hd > 1) {
+        // check for double rotation / degeneration
+        if (leftRotate(parent, dir, false) == 3) {
+            rightRotate(node, 1, true);
+            leftRotate(parent, dir, true);
+        }
+    }
+    else if (hd < 1) {
+        if (rightRotate(parent, dir, false) == 3) {
+            leftRotate(node, 0, true);
+            rightRotate(parent, dir, true);
+        }
+    }
+    // recurse
+    if (node->right != NULL) {
+        helpRebalance(node, node->right, 1);
+    }
+    if (node->left != NULL) {
+        helpRebalance(node, node->left, 0);
+    } 
+}   
+
 void LockFreeAVLTree::rebalance() {
-    
+    if (root->right != NULL) {
+        helpRebalance(root, root->right, 1);
+    }
+    if (root->left != NULL) {
+        helpRebalance(root, root->left, 0);
+    }
 }

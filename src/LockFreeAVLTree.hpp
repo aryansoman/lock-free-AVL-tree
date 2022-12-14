@@ -101,6 +101,7 @@ private:
     void helpInsert(Op *op, LockFreeNode *dest);
     void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node);
     bool helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child);
+    void helpRebalance(LockFreeNode *parent, LockFreeNode *node, int dir);
 };
 
 #endif
