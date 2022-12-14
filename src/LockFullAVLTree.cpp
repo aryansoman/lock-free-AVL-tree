@@ -1,6 +1,7 @@
 #include <mutex>
 #include <vector>
 #include <stack>
+#include <iostream>
 
 #include "LockFullAVLTree.hpp"
 
@@ -427,4 +428,18 @@ void LockFullAVLTree::rebalance() {
         }
     }
     return;
+}
+
+void printBT(const std::string& prefix, const LockFullNode* node, bool isLeft) {
+    if (node != NULL) {
+        std::cout << prefix;
+        std::cout << (isLeft ? "├──" : "└──");
+        std::cout << node->key << std::endl;
+        printBT(prefix + (isLeft ? "│   " : "    "), node->left, true);
+        printBT(prefix + (isLeft ? "│   " : "    "), node->right, false);
+    }
+}
+
+void LockFullAVLTree::printTree() {
+    printBT("", root, false);
 }
