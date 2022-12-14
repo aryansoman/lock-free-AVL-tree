@@ -2,6 +2,11 @@
 #include <cstddef>
 #include <vector>
 
+#ifndef _LOCK_FREE_AVL_TREE_
+#define _LOCK_FREE_AVL_TREE_
+
+#include "ConcurrentAVLTree.hpp"
+
 // rotate op states
 #define UNDECIDED 0
 #define GRABBED 1
@@ -79,12 +84,13 @@ static inline long GETFLAG(Op *op) {
 }
 // ------------------------------
 
-class LockFreeAVLTree {
+class LockFreeAVLTree : public ConcurrentAVLTree {
 public: 
     LockFreeAVLTree();
     bool insert(int key);
     bool remove(int key);
     bool search(int key);
+    void rebalance();
     void getElements(std::vector<int> &elements); // not thread safe
 private:
     LockFreeNode *root;
@@ -96,3 +102,5 @@ private:
     void helpMarked(LockFreeNode *parent, Op *parentOp, LockFreeNode *node);
     bool helpRotate(Op *op, LockFreeNode *parent, LockFreeNode *node, LockFreeNode *child);
 };
+
+#endif

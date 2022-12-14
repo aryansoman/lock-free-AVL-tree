@@ -1,4 +1,10 @@
-all: LockFull.exe LockFree.exe 
+all: LockFull.exe LockFree.exe Performance.exe
+
+Performance.exe: LockFullSrc.o LockFreeSrc.o Performance.o
+	g++ -o Performance.exe LockFullSrc.o LockFreeSrc.o Performance.o
+
+Performance.o: tst/Performance.cpp
+	g++ -o Performance.o -Isrc -c tst/Performance.cpp
 
 LockFull.exe: LockFullSrc.o LockFullTst.o
 	g++ -o LockFull.exe LockFullSrc.o LockFullTst.o
@@ -19,4 +25,4 @@ LockFreeTst.o: tst/LockFreeTest.cpp
 	g++ -o LockFreeTst.o -Isrc -c tst/LockFreeTest.cpp
 
 clean:
-	rm LockFree.exe LockFull.exe LockFullSrc.o LockFullTst.o LockFreeSrc.o LockFreeTst.o
+	rm LockFree.exe LockFull.exe Performance.exe LockFullSrc.o LockFullTst.o LockFreeSrc.o LockFreeTst.o Performance.o

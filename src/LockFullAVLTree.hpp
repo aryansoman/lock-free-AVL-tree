@@ -2,6 +2,11 @@
 #include <vector>
 #include <stack>
 
+#ifndef _LOCK_FULL_AVL_TREE_
+#define _LOCK_FULL_AVL_TREE_
+
+#include "ConcurrentAVLTree.hpp"
+
 struct LockFullNode {
     int key;
     bool valid;
@@ -20,7 +25,7 @@ struct LockFullNode {
     }
 };
 
-class LockFullAVLTree {
+class LockFullAVLTree : public ConcurrentAVLTree {
 public:
     LockFullAVLTree();
     bool insert(int key);
@@ -34,3 +39,5 @@ private:
     void rebalanceAt(LockFullNode *parent, LockFullNode *child);
     void getElementsHelper(std::vector<int> &elements, LockFullNode *node); // not thread-safe, use only for testing
 };
+
+#endif

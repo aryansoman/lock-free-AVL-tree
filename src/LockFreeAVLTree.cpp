@@ -337,3 +337,6 @@ int LockFreeAVLTree::rightRotate(LockFreeNode *parent, int dir, bool rotate) {
     return 1;
 }
 
+void LockFreeAVLTree::rebalance() {
+    
+}
