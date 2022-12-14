@@ -434,7 +434,11 @@ void printBT(const std::string& prefix, const LockFullNode* node, bool isLeft) {
     if (node != NULL) {
         std::cout << prefix;
         std::cout << (isLeft ? "├──" : "└──");
-        std::cout << node->key << std::endl;
+        std::cout << (node->valid ? "[" : "(");
+        std::cout << node->key << ", ";
+        std::cout << node->tag << ", ";
+        std::cout << node->rbf;
+        std::cout << (node->valid ? "]" : ")") << std::endl;
         printBT(prefix + (isLeft ? "│   " : "    "), node->left, true);
         printBT(prefix + (isLeft ? "│   " : "    "), node->right, false);
     }
