@@ -71,7 +71,7 @@ bool LockFullAVLTree::insert(int key) {
             else {
                 if (prev != NULL) prev->lock.unlock();
                 LockFullNode *curCopy = new LockFullNode(cur->key, cur->valid, 0, cur->rbf);
-                        cur->key = key;
+                cur->key = key;
                 cur->tag--;
                 cur->rbf = 0;
                 cur->valid = false;
@@ -373,10 +373,9 @@ long LockFullAVLTree::unbalance() {
 
 void LockFullAVLTree::rebalance() {
     LockFullNode *p, *c, *s, *g;
-
     std::stack<LockFullNode *> stack;
+    root->tag = 0;
     stack.push(root);
-
     while (stack.empty() == false) {
         p = stack.top();
         stack.pop();
@@ -386,7 +385,6 @@ void LockFullAVLTree::rebalance() {
         if (p->right != NULL) {
             stack.push(p->right);
         }
-
         if (p->tag == 0) {
             c = p->left;
             if (c->tag != 0) {
@@ -395,12 +393,16 @@ void LockFullAVLTree::rebalance() {
                 p->lock.lock();
                 c->lock.lock();
                 s->lock.lock();
-                g->lock.lock();
+                if (g != NULL) {
+                    g->lock.lock();
+                }
                 rebalanceAt(p, c);
                 p->lock.unlock();
                 c->lock.unlock();
                 s->lock.unlock();
-                g->lock.unlock();
+                if (g != NULL) {
+                    g->lock.unlock();
+                }
                 return;
             }
             c = p->right;
@@ -410,12 +412,16 @@ void LockFullAVLTree::rebalance() {
                 p->lock.lock();
                 c->lock.lock();
                 s->lock.lock();
-                g->lock.lock();
+                if (g != NULL) {
+                    g->lock.lock();
+                }
                 rebalanceAt(p, c);
                 p->lock.unlock();
                 c->lock.unlock();
                 s->lock.unlock();
-                g->lock.unlock();
+                if (g != NULL) {
+                    g->lock.unlock();
+                }
                 return;
             }
         }
