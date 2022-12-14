@@ -221,14 +221,14 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
         }
     }
     else {
-        if (child->tag == 1) {
+        if (child->tag == -1) {
             child->tag = 0;
-            parent->tag = 1 + rb(parent);
+            parent->tag = -1 - rb(parent);
             parent->rbf--;
         }
         else { // child->tag < 0
-            child->tag++;
-            parent->tag = lb(parent);
+            child->tag--;
+            parent->tag = -lb(parent);
             parent->rbf++;
         }
     }
