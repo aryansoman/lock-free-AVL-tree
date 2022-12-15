@@ -153,17 +153,20 @@ void sequentialEnsureRebalanceReducesUnbalanceToZero() {
     int el = -15, m = 27, h = 30; 
     // create very unbalanced but not pathological tree by m -> h then el -> m - 1
     LockFullAVLTree *t = new LockFullAVLTree();
-    for (int i = m; i <= h; i++) {
+    // for (int i = m; i <= h; i++) {
+    //     assert(t->insert(i));
+    // }
+    assert(t->insert(-1));
+    for (int i = -3; i <= -2; i++) {
         assert(t->insert(i));
     }
-    for (int i = el; i <= m - 1; i++) {
-        assert(t->insert(i));
-    }
+    t->printTree();
     long unbalance = t->unbalance();
     printf("Initial unbalance is: %ld\n", unbalance);
     while (unbalance > 0) { 
         // at every rebalance call make sure the unbalance decreased 
         t->rebalance();
+        t->printTree();
         int newUnbalance = t->unbalance();
         assert(newUnbalance < unbalance);
         unbalance = newUnbalance;
@@ -245,6 +248,6 @@ void concurrentWithRebalance() {
 int main() {
     simpleSequentialNoRebalance();
     simpleConcurrentNoRebalance(); 
-    // sequentialEnsureRebalanceReducesUnbalanceToZero();
+    sequentialEnsureRebalanceReducesUnbalanceToZero();
     // concurrentWithRebalance();
 }

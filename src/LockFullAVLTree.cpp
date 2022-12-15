@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <mutex>
 #include <vector>
 #include <stack>
@@ -10,7 +11,7 @@ int lb(LockFullNode *u) {
 }
 
 int rb(LockFullNode *u) {
-    return (u->rbf == 1) ? 1 : 0;
+    return (u->rbf == 1) ? -1 : 0;
 }
 
 LockFullAVLTree::LockFullAVLTree() {
@@ -204,7 +205,7 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
     // precond: both parent and child are locked, parent->tag == 0, child->tag != 0
     // precond: other child of parent is locked.
     // precond: child of other child of parent on same side as our child is locked
-
+    printf("Rebalancing at %d %d %d\n", child->key, child->tag, child->rbf);
     bool isLeft = parent->left == child;
 
     // phase 1: tag value decrease
@@ -226,7 +227,7 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
             parent->tag = -1 - rb(parent);
             parent->rbf--;
         }
-        else { // child->tag < 0
+        else { // child->tag > 0
             child->tag--;
             parent->tag = -lb(parent);
             parent->rbf++;
@@ -300,40 +301,40 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
         if (c->tag != 0) return;
         if (c->rbf <= 0) {
             parent->key = ck;
-            parent->tag += lb(c);
+            parent->tag -= lb(c);
             parent->rbf = c->rbf + 1;
             parent->right = c->right;
             parent->left = c;
             c->key = pk;
             c->tag = 0;
-            c->rbf = lb(c) - 1;
+            c->rbf = -lb(c) - 1;
             c->right = c->left;
             c->left = s;
         }
         else { // c->rbf == 1
             LockFullNode *g = c->left; // non-NULL;
-            if (g->tag < 0) {
-                g->tag++;
+            if (g->tag > 0) {
+                g->tag--;
                 c->rbf = 0;
                 parent->rbf = -1;
-                parent->tag--;
+                parent->tag++;
             }
             else if (g->tag == 0) {
                 int gk = g->key;
                 int sk = s->key;
                 parent->key = gk;
-                parent->tag--;
+                parent->tag++;
                 parent->rbf = 0;
                 parent->left = g;
-                c->rbf = -rb(g);
+                c->rbf = rb(g);
                 c->left = g->right;
                 g->key = pk;
                 g->right = g->left;
                 g->tag = 0;
-                g->rbf = lb(g);
+                g->rbf = -lb(g);
                 g->left = s;
             }
-            else { // g->tag == 1
+            else { // g->tag == -1
                 int gk = g->key;
                 int sk = s->key;
                 parent->key = gk;
@@ -388,6 +389,7 @@ void LockFullAVLTree::rebalance() {
         }
         if (p->tag == 0) {
             c = p->left;
+            assert(c != NULL);
             if (c->tag != 0) {
                 s = p->right;
                 g = c->right;
@@ -407,6 +409,7 @@ void LockFullAVLTree::rebalance() {
                 return;
             }
             c = p->right;
+            assert(c != NULL);
             if (c->tag != 0) {
                 s = p->left;
                 g = c->left;
