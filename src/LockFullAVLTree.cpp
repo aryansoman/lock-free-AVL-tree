@@ -205,7 +205,6 @@ void LockFullAVLTree::rebalanceAt(LockFullNode *parent, LockFullNode *child) {
     // precond: both parent and child are locked, parent->tag == 0, child->tag != 0
     // precond: other child of parent is locked.
     // precond: child of other child of parent on same side as our child is locked
-    printf("Rebalancing at %d %d %d\n", child->key, child->tag, child->rbf);
     bool isLeft = parent->left == child;
 
     // phase 1: tag value decrease
@@ -389,8 +388,7 @@ void LockFullAVLTree::rebalance() {
         }
         if (p->tag == 0) {
             c = p->left;
-            assert(c != NULL);
-            if (c->tag != 0) {
+            if (c != NULL && c->tag != 0) {
                 s = p->right;
                 g = c->right;
                 p->lock.lock();
@@ -409,8 +407,7 @@ void LockFullAVLTree::rebalance() {
                 return;
             }
             c = p->right;
-            assert(c != NULL);
-            if (c->tag != 0) {
+            if (c != NULL && c->tag != 0) {
                 s = p->left;
                 g = c->left;
                 p->lock.lock();
