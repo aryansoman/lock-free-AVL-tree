@@ -248,5 +248,5 @@ int main() {
     simpleSequentialNoRebalance();
     simpleConcurrentNoRebalance(); 
     sequentialEnsureRebalanceReducesUnbalanceToZero();
-    // concurrentWithRebalance();
+    concurrentWithRebalance();
 }
