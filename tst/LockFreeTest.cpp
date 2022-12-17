@@ -87,7 +87,7 @@ void simpleConcurrentNoRebalance() {
 
     std::vector<int> elements;
     t->getElements(elements);
-    printf("Numerb of elements: %d\n", (int)elements.size());
+    printf("Number of elements: %d\n", (int)elements.size());
 
     // search for the elements
     for (int i = 0; i < NUM_THREADS; i++) {

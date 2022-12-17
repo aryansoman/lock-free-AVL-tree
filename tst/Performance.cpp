@@ -72,12 +72,18 @@ void runRebalanceWhileModifyWorking(ConcurrentAVLTree *t, threadArg *threadArgs,
 }
 
 int main(int argc, char **argv) {
-    const long numOps = 1 << 28;
-    int percentWrite = 40;
-    int datasetSize = 1 << 15;
-    int numThreads = 1;
-    bool rebalance = false;
-    bool treeType = LOCK_FULL;
+    //const long numOps = 1 << 28;
+    const long numOps = 1 << atoi(argv[6]);
+    //int percentWrite = 40;
+    int percentWrite = atoi(argv[2]);
+    //int datasetSize = 1 << 15;
+    int datasetSize = 1 << atoi(argv[3]);
+    //int numThreads = 1;
+    int numThreads = atoi(argv[4]);
+    //bool rebalance = true;
+    bool rebalance = atoi(argv[5]);
+    //bool treeType = LOCK_FULL;
+    bool treeType = atoi(argv[1]);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> randElem(0, datasetSize);
@@ -111,7 +117,7 @@ int main(int argc, char **argv) {
     operation *ops = new operation[numOps];
     for (int i = 0; i < numThreads; i++) {
         ops[i].key = randElem(gen);
-        ops[i].opType = (rand() % 100 < percentWrite) ? 
+        ops[i].opType = (rand() % 100 < percentWrite) ?
                         (rand() % 2 == 0 ? INSERT_OP : REMOVE_OP) : // write ops are split 50-50
                         SEARCH_OP;
     }
@@ -142,6 +148,6 @@ int main(int argc, char **argv) {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-    // output time, throughout information    
+    // output time, throughout information
     printf("%ld operations in %ld microseconds for %.3lf ops/mis\n", numOps, duration.count(), (float)numOps/duration.count());
 }
