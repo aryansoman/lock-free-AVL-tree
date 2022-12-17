@@ -33,12 +33,10 @@ CoarseAVLTree::CoarseAVLTree() {
 }
 
 bool CoarseAVLTree::insert(int key) {
-    lock.lock();
     CoarseNode *cur = root;
     CoarseNode *inserted;
     while (true) {
         if (key == cur->key) {
-            lock.unlock();
             return false;
         }
         else if (key < cur->key) {
@@ -112,27 +110,22 @@ bool CoarseAVLTree::insert(int key) {
         }
         break;
     }
-    lock.unlock();
     return true;
 }
 
 bool CoarseAVLTree::search(int key) {
-    lock.lock();
     CoarseNode *cur = root;
     while (cur != NULL) {
         if (key == cur->key) {
-            lock.unlock();
             return true;
         }
         else if (key < cur->key) cur = cur->left;
         else cur = cur->right;
     }
-    lock.unlock();
     return false;
 }
 
 bool CoarseAVLTree::remove(int key) {
-    lock.lock();
     CoarseNode *cur = root;
     CoarseNode *toDelete = NULL;
     // find node to delete
@@ -145,7 +138,6 @@ bool CoarseAVLTree::remove(int key) {
         else cur = cur->right;
     }
     if (toDelete == NULL) {
-        lock.unlock();
         return false;
     }
     // delete the actual node
@@ -159,14 +151,6 @@ bool CoarseAVLTree::remove(int key) {
         toDelete->key = succ->key;
         toDelete = succ;
         goto replacement;
-        // if (succ->parent != toDelete) {
-        //     shiftNodes(succ, succ->right);
-        //     succ->right = toDelete->right;
-        //     succ->right->parent = succ;
-        // }
-        // shiftNodes(toDelete, succ);
-        // succ->left = toDelete->left;
-        // succ->left->parent = succ;
     }
     // rebalance
     CoarseNode *G, *Z, *N;
@@ -227,7 +211,6 @@ bool CoarseAVLTree::remove(int key) {
         }
         if (b == 0) break;
     }
-    lock.unlock();
     return true;
 }
 

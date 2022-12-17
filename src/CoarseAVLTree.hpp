@@ -32,7 +32,6 @@ public:
     long size();
 private:
     CoarseNode *root;
-    std::mutex lock;
     CoarseNode *leftRotate(CoarseNode *X, CoarseNode *Z);
     CoarseNode *rightRotate(CoarseNode *X, CoarseNode *Z);
     CoarseNode *leftRightRotate(CoarseNode *X, CoarseNode *Z);
