@@ -1,7 +1,7 @@
 all: LockFull.exe LockFree.exe Coarse.exe Performance.exe
 
 Performance.exe: LockFullSrc.o LockFreeSrc.o Performance.o
-	g++ -o Performance.exe LockFullSrc.o LockFreeSrc.o Performance.o -pthread
+	g++ -o Performance.exe LockFullSrc.o LockFreeSrc.o CoarseSrc.o Performance.o -pthread
 
 Performance.o: tst/Performance.cpp
 	g++ -o Performance.o -Isrc -c tst/Performance.cpp -pthread
