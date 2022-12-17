@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 
     std::vector<int> elements;
     t->getElements(elements);
-    printf("Initialized with %d elements\n", (int)elements.size());
+    //printf("Initialized with %d elements\n", (int)elements.size());
 
     // create operations
     operation *ops = new operation[numOps];
@@ -154,5 +154,7 @@ int main(int argc, char **argv) {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
     // output time, throughout information
-    printf("%ld operations in %ld microseconds for %.3lf ops/mis\n", numOps, duration.count(), (float)numOps/duration.count());
+    //printf("%ld operations in %ld microseconds for %.3lf ops/mis\n", numOps, duration.count(), (float)numOps/duration.count());
+    printf("%.3lf \n", (float)numOps/duration.count());
+
 }
