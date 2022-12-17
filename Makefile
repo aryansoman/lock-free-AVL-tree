@@ -34,4 +34,4 @@ LockFreeTst.o: tst/LockFreeTest.cpp
 	g++ -o LockFreeTst.o -Isrc -c tst/LockFreeTest.cpp -pthread
 
 clean:
-	rm LockFree.exe LockFull.exe Performance.exe LockFullSrc.o LockFullTst.o LockFreeSrc.o LockFreeTst.o Coarse.exe CoarseSrc.o CoarseTst.o Performance.o outputLockFull.txt
+	rm LockFree.exe LockFull.exe Performance.exe LockFullSrc.o LockFullTst.o LockFreeSrc.o LockFreeTst.o Coarse.exe CoarseSrc.o CoarseTst.o Performance.o outputLockFull.txt outputLockFree.txt outputCoarse.txt

@@ -1,5 +1,6 @@
 #include "LockFullAVLTree.hpp"
 #include "LockFreeAVLTree.hpp"
+#include "CoarseAVLTree.hpp"
 #include "ConcurrentAVLTree.hpp"
 
 #include <assert.h>
@@ -20,6 +21,7 @@
 
 #define LOCK_FULL 0
 #define LOCK_FREE 1
+#define COARSE 2
 
 struct operation {
     int opType;
@@ -83,7 +85,7 @@ int main(int argc, char **argv) {
     //bool rebalance = true;
     bool rebalance = atoi(argv[5]);
     //bool treeType = LOCK_FULL;
-    bool treeType = atoi(argv[1]);
+    int treeType = atoi(argv[1]);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> randElem(0, datasetSize);
@@ -96,6 +98,9 @@ int main(int argc, char **argv) {
     // initialize tree
     ConcurrentAVLTree *t = NULL;
     switch (treeType) {
+        case COARSE:
+            t = new CoarseAVLTree();
+            break;
         case LOCK_FREE:
             t = new LockFreeAVLTree();
             break;
